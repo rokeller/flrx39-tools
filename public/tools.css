@@ -1,0 +1,85 @@
+html, body {
+    min-height: 100vh;
+}
+
+body {
+    margin: 0 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body.theme-dark {
+    background-color: black;
+    color: white;
+}
+
+body.theme-light {
+    background-color: white;
+    color: black;
+}
+
+body.theme-dark a {
+    color: lightblue;
+}
+
+body.theme-light a {
+    color: blue;
+}
+
+.main-container {
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.flex-container {
+    height: 100%;
+}
+
+.main-container, .flex-container {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main {
+    margin: 16px 0
+}
+
+.row {
+    width: auto;
+}
+
+.flex-item {
+    padding: 5px;
+    width: 20px;
+    height: 20px;
+    margin: 10px;
+    line-height: 20px;
+    color: white;
+    font-weight: bold;
+    font-size: 2em;
+    text-align: center;
+}
+
+.clock {
+    font-size: 3em;
+}
+
+input[type=text], textarea {
+    display: block;
+    border: 1px solid #999;
+    margin: 0;
+    padding: 2px;
+    width: calc(100% - 2px - 2*2px);
+}
+
+textarea {
+    height: 5rem;
+}
+
+.sep-v {
+    margin-top: 2ex;
+}
