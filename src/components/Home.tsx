@@ -6,6 +6,8 @@ function Home() {
         <ul>
             <li><Link to='clock'>clock</Link></li>
             <li><Link to='hash'>hash</Link></li>
+            <li><Link to='ipv4/addr'>ipv4 addresses</Link></li>
+            <li><Link to='ipv6/addr'>ipv6 addresses</Link></li>
         </ul>
     </div>
 }

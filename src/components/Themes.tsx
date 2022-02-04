@@ -12,9 +12,9 @@ function Themes() {
     }
 
     return <>
-        <a href='#' onClick={(event) => selectTheme(event, 'dark')}>dark</a>
+        <a href='#/' onClick={(event) => selectTheme(event, 'dark')}>dark</a>
         {' | '}
-        <a href='#' onClick={(event) => selectTheme(event, 'light')}>light</a>
+        <a href='#/' onClick={(event) => selectTheme(event, 'light')}>light</a>
     </>;
 }
 
