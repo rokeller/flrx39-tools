@@ -24,6 +24,10 @@ class CidrBlock {
     public last() {
         return Ipv4Address.fromNumber(FullMask - this.mask + this.start.toNumber());
     }
+
+    public size() {
+        return BigInt(1) << BigInt(32 - this.prefixLen);
+    }
 }
 
 class Ipv4Address {
@@ -122,7 +126,8 @@ function Ipv4Addresses() {
         </div>
         <div className='row'>
             <ul>
-                {address.getCidrBlocks().map(block => <li key={block.prefixLen}>{block.toString()} ({block.first().toString()} - {block.last().toString()})</li>)}
+                {address.getCidrBlocks().map(block => <li key={block.prefixLen}>{block.toString()}{' '}
+                ({block.first().toString()} - {block.last().toString()} / {block.size().toLocaleString()} address(es))</li>)}
             </ul>
         </div>
 
