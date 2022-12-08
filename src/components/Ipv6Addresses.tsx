@@ -1,7 +1,9 @@
 // https://en.wikipedia.org/wiki/IPv6_address
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatNumber } from '../utils';
+
+const ByteMask = BigInt(0xff);
 
 class Ipv6Address {
     constructor(private readonly octets: Uint8Array) {
@@ -75,16 +77,24 @@ class Ipv6Address {
         return result;
     }
 
-    public toBinary() {
-        let result = '';
+    public toBinary(breakBytes?: number) {
+        let result = [];
+        let curLine = '';
 
         for (let i = 0; i < 16; i++) {
-            if (i > 0) {
-                result += ' ';
+            if (breakBytes !== undefined && i > 0 && i % breakBytes === 0) {
+                result.push(curLine);
+                curLine = '';
             }
 
-            result += formatNumber(this.octets[i], 8, 2);
+            if (i > 0 && curLine !== '') {
+                curLine += ' ';
+            }
+
+            curLine += formatNumber(this.octets[i], 8, 2);
         }
+
+        result.push(curLine);
 
         return result;
     }
@@ -111,6 +121,16 @@ class Ipv6Address {
         }
 
         return true;
+    }
+
+    public toNumber() {
+        let result = BigInt(0);
+
+        for (let i = 0, leftShift = 120; i < 16; i++, leftShift -= 8) {
+            result |= BigInt(this.octets[i]) << BigInt(leftShift);
+        }
+
+        return result;
     }
 
     public static parse(address: string): Ipv6Address {
@@ -142,16 +162,101 @@ class Ipv6Address {
 
         return new Ipv6Address(octets);
     }
+
+    public static fromNumber(number: bigint): Ipv6Address {
+        const octets = new Uint8Array(16);
+        for (let i = 0, leftShift = 120; i < 16; i++, leftShift -= 8) {
+            octets[i] = Number((number >> BigInt(leftShift)) & ByteMask);
+        }
+
+        return new Ipv6Address(octets);
+    }
+}
+
+class GlobalId {
+    constructor(private readonly octets: Uint8Array) {
+    }
+
+    public toString() {
+        let result = '';
+        for (let i = 0; i < 5; i++) {
+            result += formatNumber(this.octets[i], 2, 16);
+        }
+        return result;
+    }
+
+    public bytes() {
+        return Array.from(this.octets).slice(0, 5);
+    }
+
+    public static generate(): GlobalId {
+        const globalId = new Uint8Array(5);
+        return new GlobalId(crypto.getRandomValues(globalId));
+    }
+}
+
+class SubnetId {
+    public static readonly Default = new SubnetId(new Uint8Array([0, 0]));
+
+    constructor(private readonly octets: Uint8Array) {
+    }
+
+    public toString() {
+        let result = '';
+
+        for (let i = 0; i < 2; i++) {
+            result += formatNumber(this.octets[i], 2, 16);
+        }
+
+        return result;
+    }
+
+    public bytes() {
+        return Array.from(this.octets).slice(0, 2);
+    }
+
+    public static parse(subnetId: string): SubnetId {
+        const octets = new Uint8Array(2);
+        const fullVal = Number.parseInt(subnetId, 16);
+
+        octets[0] = (fullVal & 0xff00) >> 8;
+        octets[1] = (fullVal & 0xff);
+
+        return new SubnetId(octets);
+    }
+}
+
+class Ipv6CidrBlock {
+    public readonly start: Ipv6Address;
+    public readonly mask: bigint;
+
+    constructor(address: Ipv6Address, public readonly prefixLen: number) {
+        this.mask = (BigInt(1) << BigInt(prefixLen)) - BigInt(1) << BigInt(128 - prefixLen);
+        this.start = Ipv6Address.fromNumber(address.toNumber() & this.mask);
+    }
+
+    public toString() {
+        return this.start.toFull() + '/' + this.prefixLen;
+    }
 }
 
 function Ipv6Addresses() {
     const [rawAddress, setRawAddress] = useState(':1');
     const [address, setAddress] = useState(Ipv6Address.parse('::1'));
+    const [globalId, setGlobalId] = useState(GlobalId.generate());
+    const [subnetId, setSubnetId] = useState(SubnetId.Default);
+    const [prefixLen, setPrefixLen] = useState(48);
+    const [ula, setULA] = useState<Ipv6CidrBlock>();
 
     function setAndConvertFromRaw(rawAddress: string) {
         setRawAddress(rawAddress);
         setAddress(Ipv6Address.parse(rawAddress));
     }
+
+    useEffect(() => {
+        const baseAddr = new Ipv6Address(new Uint8Array([0xfc, ...globalId.bytes(), ...subnetId.bytes(), 0, 0, 0, 0, 0, 0, 0, 0]));
+        setULA(new Ipv6CidrBlock(baseAddr, prefixLen));
+    }, [globalId, subnetId, prefixLen]);
 
     return <div>
         <h1>ipv6 address tools by flrx39</h1>
@@ -159,74 +264,113 @@ function Ipv6Addresses() {
             ipv6 address tools
         </p>
         <h2>analysis</h2>
-        <div className='row'>
-            <label>
-                input address
-                <input type='text' onChange={(event) => setAndConvertFromRaw(event.target.value)} value={rawAddress} />
-            </label>
-        </div>
-        <div className='row'>
-            <ul>
-                {address?.isMulticast() ? <li>multicast</li> : <></>}
-                {address?.isUnicastOrAnycast() ? <>
-                    <li>unicast or anycast</li>
-                    {address?.isLoopback() ? <li>loopback (aka localhost)</li> : <></>}
-                    {address?.isIpv4MappedAddress() ?
-                        <li>ipv4 mapped address ({address.getIpv4MappedAddress()})</li> : <></>}
-                    {address?.isIpv4TranslatedAddress() ?
-                        <li>ipv4 translated address ({address.getIpv4MappedAddress()})</li> : <></>}
-                    {address?.isTeredoTunneling() ? <li>teredo tunneling</li> : <></>}
-                    {address?.is6to4() ? <li>6-to-4 addressing (deprecated)</li> : <></>}
-                    {address?.isExample() ? <li>documentation / example address</li> : <></>}
+        <div>
+            <div className='row'>
+                <label>
+                    input address
+                    <input type='text' onChange={(event) => setAndConvertFromRaw(event.target.value)} value={rawAddress} />
+                </label>
+            </div>
+            <div className='row'>
+                <ul>
+                    {address?.isMulticast() ? <li>multicast</li> : <></>}
+                    {address?.isUnicastOrAnycast() ? <>
+                        <li>unicast or anycast</li>
+                        {address?.isLoopback() ? <li>loopback (aka localhost)</li> : <></>}
+                        {address?.isIpv4MappedAddress() ?
+                            <li>ipv4 mapped address ({address.getIpv4MappedAddress()})</li> : <></>}
+                        {address?.isIpv4TranslatedAddress() ?
+                            <li>ipv4 translated address ({address.getIpv4MappedAddress()})</li> : <></>}
+                        {address?.isTeredoTunneling() ? <li>teredo tunneling</li> : <></>}
+                        {address?.is6to4() ? <li>6-to-4 addressing (deprecated)</li> : <></>}
+                        {address?.isExample() ? <li>documentation / example address</li> : <></>}
 
-                    {address?.isUniqueLocalAddress() ?
-                        <>
-                            <li>unique local address</li>
-                            {address?.isLocallyAssigned() ? <li>locally assigned</li> : <li>globally assigned</li>}
-                        </> :
-                        <></>}
+                        {address?.isUniqueLocalAddress() ?
+                            <>
+                                <li>unique local address</li>
+                                {address?.isLocallyAssigned() ? <li>locally assigned</li> : <li>globally assigned</li>}
+                            </> :
+                            <></>}
 
-                    {address?.isLinkLocal() ?
-                        <li>link-local ({address.isValidLinkLocalSubnet() ? 'valid' : 'invalid'} subnet)</li> : <></>}
-                </> : <></>}
-            </ul>
-        </div>
+                        {address?.isLinkLocal() ?
+                            <li>link-local ({address.isValidLinkLocalSubnet() ? 'valid' : 'invalid'} subnet)</li> : <></>}
+                    </> : <></>}
+                </ul>
+            </div>
 
-        {address?.isUnicastOrAnycast() ? <>
+            {address?.isUnicastOrAnycast() ? <>
+                <div className='row sep-v'>
+                    network prefix
+                </div>
+                <div className='row'>
+                    {address?.getNetworkPrefix()}
+                </div>
+                <div className='row'>
+                    interface id
+                </div>
+                <div className='row'>
+                    {address?.getInterfaceId()}
+                </div>
+            </> : <></>}
+
             <div className='row sep-v'>
-                network prefix
+                full representation
             </div>
             <div className='row'>
-                {address?.getNetworkPrefix()}
+                {address?.toFull()}
             </div>
-            <div className='row'>
-                interface id
-            </div>
-            <div className='row'>
-                {address?.getInterfaceId()}
-            </div>
-        </> : <></>}
 
-        <div className='row sep-v'>
-            full representation
-        </div>
-        <div className='row'>
-            {address?.toFull()}
-        </div>
-
-        <div className='row sep-v'>
-            binary representation
-        </div>
-        <div className='row'>
-            {address?.toBinary()}
-        </div>
-
-        {process.env.NODE_ENV === 'development' ?
+            <div className='row sep-v'>
+                binary representation
+            </div>
             <div className='row'>
-                <pre>
-                    {JSON.stringify(address, null, 4)}
-                </pre>
-            </div> : <></>}
+                {address?.toBinary(8).map((line) => <div>{line}</div>)}
+            </div>
+
+            {process.env.NODE_ENV === 'development' ?
+                <div className='row'>
+                    <pre>
+                        {JSON.stringify(address, null, 4)}
+                    </pre>
+                </div> : <></>}
+        </div>
+        <h2>unique local addresses / private addresses</h2>
+        <div>
+            <div className='row text'>
+                use this section to generate a random network for unique local addresses. these are similar to private
+                networks in ipv4, but the must use a random part (the <em>global id</em>, bits 8 to 47). you are however
+                free to choose the <em>subnet id</em> (the least significant 16 bits of the network prefix).
+            </div>
+            <div className='row sep-v flex-container flex-spread'>
+                <div className='flex-item-grow-1'>
+                    <label>
+                        global id (hex, 5 bytes)
+                        <input type='text' readOnly value={globalId.toString()} />
+                    </label>
+                    <button onClick={() => setGlobalId(GlobalId.generate())}>generate new</button>
+                </div>
+                <div className='flex-item-grow-1'>
+                    <label>
+                        subnet id (hex, 2 bytes)
+                        <input type='text' onChange={(event) => setSubnetId(SubnetId.parse(event.target.value))} value={subnetId.toString()} />
+                    </label>
+                </div>
+                <div className='flex-item-grow-1'>
+                    <label>
+                        prefix length
+                        <input type='number' onChange={(event) => setPrefixLen(Number(event.target.value))} value={prefixLen}
+                            min={8} max={64} />
+                    </label>
+                </div>
+            </div>
+
+            <div className='row sep-v'>
+                resulting cidr
+            </div>
+            <div className='row'>
+                {ula?.toString()}
+            </div>
+        </div>
     </div>;
 }
 
