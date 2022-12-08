@@ -338,7 +338,7 @@ function Ipv6Addresses() {
         <div>
             <div className='row text'>
                 use this section to generate a random network for unique local addresses. these are similar to private
-                networks in ipv4, but the must use a random part (the <em>global id</em>, bits 8 to 47). you are however
+                networks in ipv4, but they must use a random part (the <em>global id</em>, bits 8 to 47). you are however
                 free to choose the <em>subnet id</em> (the least significant 16 bits of the network prefix).
             </div>
             <div className='row sep-v flex-container flex-spread'>
