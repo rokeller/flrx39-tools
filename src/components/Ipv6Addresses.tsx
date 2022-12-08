@@ -254,7 +254,7 @@ function Ipv6Addresses() {
     }
 
     useEffect(() => {
-        const baseAddr = new Ipv6Address(new Uint8Array([0xfc, ...globalId.bytes(), ...subnetId.bytes(), 0, 0, 0, 0, 0, 0, 0, 0]));
+        const baseAddr = new Ipv6Address(new Uint8Array([0xfd, ...globalId.bytes(), ...subnetId.bytes(), 0, 0, 0, 0, 0, 0, 0, 0]));
         setULA(new Ipv6CidrBlock(baseAddr, prefixLen));
     }, [globalId, subnetId, prefixLen]);
 
