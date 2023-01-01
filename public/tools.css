@@ -88,3 +88,60 @@ textarea {
 .sep-v {
     margin-top: 2ex;
 }
+
+/* for JSON pretty print */
+
+#json {
+    min-height: 5em;
+    height: auto;
+    outline: none;
+    white-space: pre;
+    font-family: monospace;
+    padding: 8px 4px;
+}
+
+.theme-light #json {
+    border: 1px solid #222;
+}
+
+.theme-dark #json {
+    border: 1px solid white;
+    background-color: #222;
+    color: white;
+}
+
+.theme-light .property {
+    color: red;
+}
+
+.theme-light .number {
+    color: green;
+}
+
+.theme-light .string {
+    color: blue;
+}
+
+.theme-light .keyword {
+    color: maroon;
+}
+
+.theme-dark .property {
+    color: #9F7CDD;
+}
+
+.theme-dark .number {
+    color: lightgreen;
+}
+
+.theme-dark .string {
+    color: #F1759C;
+}
+
+.theme-dark .keyword {
+    color: #4392F7;
+}
+
+.overflow-x-scroll {
+    overflow-x: auto;
+}

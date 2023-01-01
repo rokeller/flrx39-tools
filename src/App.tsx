@@ -4,6 +4,7 @@ import Hash from './components/Hash';
 import Home from './components/Home';
 import Ipv4Addresses from './components/Ipv4Addresses';
 import Ipv6Addresses from './components/Ipv6Addresses';
+import PrettyPrintJson from './components/PrettyPrintJson';
 import Themes from './components/Themes';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
                         <Route path='hash' element={<Hash />} />
                         <Route path='ipv4/addr' element={<Ipv4Addresses />} />
                         <Route path='ipv6/addr' element={<Ipv6Addresses />} />
+                        <Route path='pretty-print-json' element={<PrettyPrintJson />} />
                     </Routes>
                 </div>
             </div></div>
