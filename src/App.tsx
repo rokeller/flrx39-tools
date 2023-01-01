@@ -1,4 +1,4 @@
-import { HashRouter as Router, Link, Route, Switch } from 'react-router-dom';
+import { HashRouter as Router, Link, Route, Routes } from 'react-router-dom';
 import Clock from './components/Clock';
 import Hash from './components/Hash';
 import Home from './components/Home';
@@ -16,13 +16,13 @@ function App() {
                     <Themes />
                 </div>
                 <div className='row'>
-                    <Switch>
-                        <Route path='/clock' component={Clock}></Route>
-                        <Route path='/hash' component={Hash}></Route>
-                        <Route path='/ipv4/addr' component={Ipv4Addresses}></Route>
-                        <Route path='/ipv6/addr' component={Ipv6Addresses}></Route>
-                        <Route path='/' component={Home}></Route>
-                    </Switch>
+                    <Routes>
+                        <Route path='' element={<Home />} />
+                        <Route path='clock' element={<Clock />} />
+                        <Route path='hash' element={<Hash />} />
+                        <Route path='ipv4/addr' element={<Ipv4Addresses />} />
+                        <Route path='ipv6/addr' element={<Ipv6Addresses />} />
+                    </Routes>
                 </div>
             </div></div>
         </Router>

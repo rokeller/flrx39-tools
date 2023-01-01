@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Buffer } from 'buffer';
 
 type InputEncoding = 'utf8' | 'hex' | 'base64';
 
